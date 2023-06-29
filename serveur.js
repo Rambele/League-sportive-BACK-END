@@ -260,6 +260,40 @@ app.post('/api/users', async (req, res) => {
   });
 //============================================================================
 
+//========================Connexion user=====================================
+app.post('/api/login', (req, res) => {
+    const { email, motDePasse } = req.body;
+  
+    // Recherchez l'utilisateur correspondant à l'email fourni dans la base de données
+    User.findOne({ email })
+      .then((utilisateur) => {
+        if (!utilisateur) {
+          return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+  
+        // Vérifiez si le mot de passe saisi correspond au mot de passe stocké dans la base de données
+        bcrypt.compare(motDePasse, utilisateur.motDePasse)
+          .then((match) => {
+            if (!match) {
+              return res.status(401).json({ error: 'Mot de passe incorrect' });
+            }
+  
+            // Si le mot de passe est correct,  générer un token d'authentification ou créer une session utilisateur
+            res.json({ message: 'Connexion réussie', utilisateur: utilisateur });
+          })
+          .catch((error) => {
+            console.error('Erreur lors de la comparaison des mots de passe:', error);
+            res.status(500).json({ error: 'Erreur de connexion' });
+          });
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la recherche de l\'utilisateur:', error);
+        res.status(500).json({ error: 'Erreur de connexion' });
+      });
+  });
+  
+//===========================================================================
+
 // Démarrage du serveur et écoute des requêtes entrantes
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
